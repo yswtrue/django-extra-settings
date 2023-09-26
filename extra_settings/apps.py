@@ -13,8 +13,21 @@ class ExtraSettingsConfig(AppConfig):
         from extra_settings import signals  # noqa: F401
         from extra_settings.models import Setting
 
+        is_async = False
         try:
-            Setting.set_defaults_from_settings()
+            import asyncio
+
+            asyncio.get_running_loop()
+            is_async = True
+        except:
+            pass
+        try:
+            if is_async:
+                from asgiref.sync import sync_to_async
+
+                sync_to_async(Setting.set_defaults_from_settings)()
+            else:
+                Setting.set_defaults_from_settings()
         except (OperationalError, ProgrammingError):
             pass
 
